@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Kontrol Peserta (Final Layout Fix)</title>
+    <title>Kartu Kontrol Peserta (Text Truncate Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -78,7 +78,7 @@
             align-items: center;
             border-bottom: 2px solid #000;
             padding-bottom: 5px;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         .logo { width: 45px; height: 45px; }
         .logo img { width: 100%; height: 100%; object-fit: contain; }
@@ -109,90 +109,68 @@
             print-color-adjust: exact;
         }
 
-        /* --- LAYOUT BARU BAGIAN ATAS (POINT 2) --- */
-        .top-container {
+        /* --- LAYOUT DIKEMBALIKAN KE ASAL (FOTO - INFO - QR) --- */
+        .top-section {
             display: flex;
-            width: 100%;
-            height: 4cm; /* Tinggi area identitas */
-            margin-bottom: 5px;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            height: 3.8cm; /* Tinggi fix area identitas */
         }
-
-        /* Kolom Kiri: Foto */
-        .left-col-photo {
+        
+        /* Area Foto */
+        .photo-area {
             width: 2.8cm;
-            height: 3.8cm;
-            margin-right: 8px;
+            height: 100%;
             background: #eee;
-            border: 1px solid #ccc;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0; /* Foto tidak boleh mengecil */
+            border: 1px solid #ccc;
         }
-        .left-col-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-area img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Kolom Kanan: Info + QR + Lembaga */
-        .right-col-info {
+        /* Area Info Tengah */
+        .info-area {
             flex: 1;
+            padding-left: 8px;
+            padding-right: 5px;
+            font-size: 9pt;
+            line-height: 1.3;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center; /* Center Vertikal */
         }
-
-        /* Baris 1 di Kanan: Info & QR */
-        .info-qr-row {
+        
+        /* Area QR Kanan */
+        .qr-area {
+            width: 2.6cm;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex: 1;
-        }
-        .info-text {
-            font-size: 9pt;
-            line-height: 1.4;
-            padding-top: 2px;
-        }
-        .qr-box {
-            width: 2.5cm; /* QR area */
-            display: flex;
-            justify-content: flex-end;
+            justify-content: flex-end; /* Rata Kanan */
+            align-items: flex-start;   /* Mulai dari atas */
         }
 
-        /* Baris 2 di Kanan: Lembaga (Full Width di bawah QR) */
-        .lembaga-row {
-            font-size: 9pt;
-            font-weight: bold;
-            margin-top: auto; /* Dorong ke paling bawah container */
-            margin-bottom: 2px;
-            white-space: nowrap; /* Memaksa 1 baris */
-            overflow: hidden;    /* Sembunyikan jika kepanjangan */
-            text-overflow: ellipsis; /* Beri ... jika kepanjangan */
-            width: 100%;
-            border-top: 1px dotted #ccc; /* Opsional: pemisah tipis */
-            padding-top: 2px;
+        /* Styling Khusus Teks Lembaga */
+        .lembaga-text {
+            margin-top: 3px;
+            font-weight: normal;
         }
-
-        /* --- NAMA PESERTA (POINT 1) --- */
+        
+        /* --- NAMA PESERTA (FIXED HEIGHT & CENTER) --- */
         .nama-peserta-box {
-            /* Tinggi tetap untuk 3 baris text */
-            height: 1.6cm; 
+            height: 1.6cm; /* Ruang untuk 3 baris */
             width: 100%;
-            
-            /* Flexbox untuk Center Vertikal & Horizontal */
             display: flex;
             align-items: center;     /* Center Vertikal */
             justify-content: center; /* Center Horizontal */
-            
             text-align: center;
             font-weight: bold;
             font-size: 11pt;
             text-transform: uppercase;
             line-height: 1.2;
-            overflow: hidden; /* Mencegah teks keluar kotak */
-            
-            border: 1px solid #eee; /* Garis bantu tipis (opsional) */
+            overflow: hidden;
             margin-bottom: 5px;
-            padding: 0 2px;
+            /* border: 1px dashed #ccc; */ /* Uncomment untuk debug area nama */
         }
 
         /* TABEL NILAI */
@@ -201,7 +179,7 @@
             border-collapse: collapse;
             font-size: 10pt;
             border: 2px solid #000;
-            flex: 1; /* Mengisi sisa ruang ke bawah */
+            flex: 1; 
         }
         th {
             border: 1px solid #000;
@@ -315,7 +293,7 @@
                         el.innerHTML = "";
                         new QRCode(el, {
                             text: data['ID Pendaftaran'] || 'NODATA',
-                            width: 75, height: 75,
+                            width: 80, height: 80,
                             correctLevel: QRCode.CorrectLevel.L
                         });
                     }
@@ -338,18 +316,48 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'card-wrapper';
 
-            // DATA
+            // DATA DASAR
             const rawNomor = data['NOMOR'] || data['Nomor'] || '';
             const NOMOR = rawNomor ? String(rawNomor).padStart(3, '0') : '';
-
             const GEL = data['Gelombang'] || '-';
             const SHIFT = data['Shift'] || '-';
-            const LEMBAGA = data['Asal Lembaga / TPQ'] || '-';
             const ID_EBTAQ = data['ID Pendaftaran'] || '-';
             const NAMA = (data['Nama Lengkap (Sesuai Akta)'] || '').toUpperCase();
             
             const rawFoto = data['Kirim Pas Foto Ukuran PostCard'] || '';
             const FOTO = getDirectDriveUrl(rawFoto);
+
+            // LOGIKA PEMOTONGAN TEKS LEMBAGA
+            let rawLembaga = data['Asal Lembaga / TPQ'] || '-';
+            let kota = "";
+            let sekolah = rawLembaga;
+
+            // 1. Cek tanda pisah " - " (Spasi Strip Spasi) atau "-"
+            if (rawLembaga.includes(" - ")) {
+                const parts = rawLembaga.split(" - ");
+                kota = parts[0];
+                sekolah = parts[1] || ""; // Ambil sisanya
+            } else if (rawLembaga.includes("-")) {
+                const parts = rawLembaga.split("-");
+                kota = parts[0];
+                sekolah = parts.slice(1).join("-"); // Gabung sisanya jika ada strip lain
+            } else {
+                // Jika tidak ada strip sama sekali, anggap 'kota' kosong, 'sekolah' full text
+                // Atau bisa juga sekolah = rawLembaga, kota = ""
+            }
+
+            // 2. Batasi karakter Sekolah maks 20 char -> jika lebih potong jadi 16 + ...
+            if (sekolah.length > 20) {
+                sekolah = sekolah.substring(0, 16) + " ...";
+            }
+
+            // Gabung HTML Lembaga
+            let lembagaHTML = "";
+            if (kota) {
+                lembagaHTML += `<div>${kota}</div>`;
+            }
+            lembagaHTML += `<div>${sekolah}</div>`;
+
 
             wrapper.innerHTML = `
                 <div class="card-frame">
@@ -368,27 +376,23 @@
                         <div class="nomor-box">${NOMOR}</div>
                     </div>
 
-                    <div class="top-container">
-                        <div class="left-col-photo">
+                    <div class="top-section">
+                        <div class="photo-area">
                             <img src="${FOTO}" onerror="this.style.display='none'; this.parentElement.style.background='#ccc';">
                         </div>
 
-                        <div class="right-col-info">
+                        <div class="info-area">
+                            <div style="font-weight:bold;">ID. ${ID_EBTAQ}</div>
+                            <div>Gel._: ${GEL}</div>
+                            <div>Shift: ${SHIFT}</div>
                             
-                            <div class="info-qr-row">
-                                <div class="info-text">
-                                    <div style="font-weight:bold;">ID. ${ID_EBTAQ}</div>
-                                    <div>Gel._: ${GEL}</div>
-                                    <div>Shift: ${SHIFT}</div>
-                                </div>
-                                <div class="qr-box">
-                                    <div id="qr-${index}"></div>
-                                </div>
+                            <div class="lembaga-text">
+                                ${lembagaHTML}
                             </div>
+                        </div>
 
-                            <div class="lembaga-row">
-                                ${LEMBAGA}
-                            </div>
+                        <div class="qr-area">
+                            <div id="qr-${index}"></div>
                         </div>
                     </div>
 
