@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu EBTAQ (Halaman X dari XX)</title>
+    <title>Cetak Kartu EBTAQ (Header Paraf Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -13,22 +13,25 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #525659;
+            
+            /* REVISI: Padding & Margin dinolkan sesuai permintaan */
             margin: 0;
-            padding: 0; /* Padding body dikurangi */
+            padding: 0; 
+            
             text-align: center;
         }
 
-        /* Label Halaman (Diperbarui) */
+        /* Label Halaman */
         .page-label {
             display: inline-block;
-            background-color: #222; /* Lebih gelap */
+            background-color: #222;
             color: #fff;
             padding: 4px 12px;
             border-radius: 4px;
             font-size: 13px;
             font-weight: bold;
-            margin-top: 10px;
-            margin-bottom: 5px; /* Jarak sangat dekat dengan kertas */
+            margin-top: 15px; /* Sedikit jarak agar label tidak nempel atap */
+            margin-bottom: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
@@ -37,17 +40,12 @@
             background-color: white;
             width: 215mm;
             height: 330mm;
-            
-            /* Margin Auto Kiri-Kanan (Center), Bawah 15px (Rapat) */
             margin: 0 auto 15px auto; 
-            
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             box-sizing: border-box;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            
-            /* Print Properties */
             page-break-after: always;
             position: relative;
             overflow: hidden;
@@ -57,30 +55,25 @@
         .cut-line-v { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px dashed #999; z-index: 10; }
         .cut-line-h { position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed #999; z-index: 10; }
 
-
         /* ================================================= */
-        /* 2. SETUP CETAK (PRINT VIEW - Ctrl+P)              */
+        /* 2. SETUP CETAK (PRINT VIEW)                       */
         /* ================================================= */
         @media print {
             body { background: none; padding: 0; margin: 0; }
-            .page-label { display: none !important; } /* Sembunyikan Label */
-            
+            .page-label { display: none !important; }
             .page-container {
                 width: 215mm; height: 330mm;
                 margin: 0; box-shadow: none; border: none;
                 page-break-after: always;
             }
-
-            /* Force Print Colors */
             .id-text-row, .id-lembaga-full, .id-qr { border-bottom: 1px dotted #ccc !important; }
             .nomor-box { background-color: #FFC000 !important; -webkit-print-color-adjust: exact; }
             th { background-color: #ccc !important; -webkit-print-color-adjust: exact; }
             .nama-box { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
         }
 
-
         /* ================================================= */
-        /* 3. DESAIN KARTU (LAYOUT FINAL)                    */
+        /* 3. DESAIN KARTU                                   */
         /* ================================================= */
         .card-wrapper { padding: 5mm; box-sizing: border-box; display: flex; }
 
@@ -92,7 +85,7 @@
             position: relative;
         }
 
-        /* HEADER */
+        /* Header */
         .header {
             display: flex; align-items: center;
             border-bottom: 2px solid #000;
@@ -101,7 +94,6 @@
         }
         .logo { width: 50px; height: 50px; display:flex; align-items:center; }
         .logo img { width: 100%; height: 100%; object-fit: contain; }
-        
         .title-group { 
             flex: 1; text-align: center; font-family: "Times New Roman", serif; 
             display: flex; flex-direction: column; justify-content: center;
@@ -117,7 +109,7 @@
             -webkit-print-color-adjust: exact;
         }
 
-        /* IDENTITY GRID */
+        /* Identity Grid */
         .identity-grid {
             display: grid;
             grid-template-columns: 2.45cm auto 2.6cm; 
@@ -146,7 +138,7 @@
             white-space: nowrap;
         }
 
-        /* NAMA PESERTA */
+        /* Nama Box */
         .nama-box {
             height: 1.1cm; width: 100%;
             display: flex; align-items: center; justify-content: center;
@@ -156,12 +148,12 @@
             -webkit-print-color-adjust: exact; overflow: hidden;
         }
 
-        /* TABEL */
+        /* Tabel */
         table { width: 100%; border-collapse: collapse; border: 2px solid #000; flex: 1; }
         th, td { border: 1px solid #000; padding: 3px 4px; font-size: 11pt; }
         th { background-color: #ccc; font-weight: bold; text-align: center; -webkit-print-color-adjust: exact; }
         .col-no { width: 8%; text-align: center; }
-        .col-paraf { width: 20%; }
+        /* Kolom paraf tidak perlu class width di header karena di-merge, tapi tetap dipakai di body */
     </style>
 </head>
 <body>
@@ -209,14 +201,11 @@
 
         function renderCards(participants) {
             const perPage = 4;
-            // 1. Hitung Total Halaman dulu
             const totalPages = Math.ceil(participants.length / perPage);
-
             let currentContainer = createPage();
             let pageIndex = 1;
 
             participants.forEach((p, i) => {
-                // Jika sudah 4 kartu, push container sebelumnya ke DOM
                 if (i > 0 && i % perPage === 0) {
                     appendPageToDOM(currentContainer, pageIndex, totalPages);
                     pageIndex++;
@@ -226,20 +215,15 @@
                 generateQR(p['ID Pendaftaran'], `qr-${i}`);
             });
             
-            // Push container terakhir jika ada isinya
             if (currentContainer.hasChildNodes()) {
                 appendPageToDOM(currentContainer, pageIndex, totalPages);
             }
         }
 
-        // Fungsi Memasukkan Label Halaman + Kertas ke DOM
-        // Sekarang menerima parameter 'total'
         function appendPageToDOM(container, index, total) {
             const label = document.createElement('div');
             label.className = 'page-label';
-            // Format Label: HALAMAN X DARI XX
             label.innerText = `HALAMAN ${index} DARI ${total}`;
-            
             const mainOutput = document.getElementById('main-output');
             mainOutput.appendChild(label);
             mainOutput.appendChild(container);
@@ -303,8 +287,7 @@
                             <tr>
                                 <th class="col-no">NO</th>
                                 <th>MATERI</th>
-                                <th class="col-paraf">PARAF</th>
-                                <th class="col-paraf">PARAF</th>
+                                <th colspan="2">PARAF PENGUJI</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -312,8 +295,8 @@
                                 <tr>
                                     <td class="col-no">${idx+1}</td>
                                     <td class="col-materi">${m}</td>
-                                    <td style="border-right:1px solid #000; vertical-align:top; font-size:11pt; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
-                                    <td style="vertical-align:top; font-size:11pt; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
+                                    <td style="width:20%; border-right:1px solid #000; vertical-align:top; font-size:11pt; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
+                                    <td style="width:20%; vertical-align:top; font-size:11pt; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
