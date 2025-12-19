@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Kontrol EBTAQ - Final Precision</title>
+    <title>Kartu Kontrol EBTAQ - Ratio 3:4 Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -63,14 +63,20 @@
         }
 
         /* ================================================= */
-        /* 3. GRID IDENTITAS (NARRATIVE STYLE)               */
+        /* 3. GRID IDENTITAS (RASIO 3:4 & AUTO WIDTH)        */
         /* ================================================= */
         .identity-grid {
             display: grid;
-            grid-template-columns: 2.8cm auto 2.6cm; 
+            /* Kolom 1 (Foto): 2.45cm (Hitungan 3x4 dari tinggi 3.25cm) */
+            /* Kolom 2 (Data): Auto (Mengambil sisa ruang) */
+            /* Kolom 3 (QR): 2.6cm (Tetap) */
+            grid-template-columns: 2.45cm auto 2.6cm; 
+            
+            /* Tinggi Baris: 5 baris x 0.65cm = Total 3.25cm */
             grid-template-rows: repeat(5, 0.65cm); 
+            
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .id-photo {
@@ -87,6 +93,9 @@
             font-weight: bold; 
             display: flex; align-items: center;
             border-bottom: 1px dotted #ccc;
+            white-space: nowrap; /* Mencegah teks turun baris */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .id-qr {
@@ -98,21 +107,24 @@
         .id-lembaga-full {
             grid-column: 2 / span 2; 
             padding-left: 10px; 
-            font-size: 10.5pt;
+            font-size: 11pt; /* Font disamakan (Besar) */
+            font-weight: bold; /* Tebal (Bold) */
             display: flex; align-items: center;
             border-bottom: 1px dotted #ccc;
             white-space: nowrap;
         }
 
-        /* Nama Peserta */
+        /* Nama Peserta (Tinggi dikurangi untuk 2 baris) */
         .nama-box {
-            height: 1.6cm; width: 100%;
+            height: 1.1cm; /* Cukup untuk 2 baris */
+            width: 100%;
             display: flex; align-items: center; justify-content: center;
             text-align: center; font-weight: bold; font-size: 12pt;
             text-transform: uppercase; line-height: 1.1;
             margin-bottom: 5px;
             background-color: #f2f2f2;
             -webkit-print-color-adjust: exact;
+            overflow: hidden;
         }
 
         /* Tabel Penilaian */
@@ -133,7 +145,7 @@
 <body>
 
     <div id="loading" style="text-align: center; margin-top: 50px; color: white;">
-        <h3>Menyusun Kartu EBTAQ...</h3>
+        <h3>Memproses Data Kartu...</h3>
     </div>
     <div id="main-output"></div>
 
@@ -200,17 +212,17 @@
             
             // --- TRANSFORMASI DATA ---
             
-            // 1. Gelombang: Tetap Angka Biasa
+            // Gelombang
             const gelombangText = `Gelombang ${p['Gelombang'] || '-'}`;
 
-            // 2. Shift: Konversi ke Romawi + Jam
+            // Shift (Romawi + Jam)
             const sVal = String(p['Shift']).trim();
             let shiftDisplay = `Shift ${sVal}`; 
             if (sVal === "1") shiftDisplay = "Shift I (07.00 WIB)";
             else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
             else if (sVal === "3") shiftDisplay = "Shift III (10.00 WIB)";
 
-            // 3. Lembaga: Split & Batas 50 karakter
+            // Lembaga (Kota Bold, Sekolah Bold, Limit 50)
             const rawL = p['Asal Lembaga / TPQ'] || '-';
             let kota = "", sekolah = rawL;
             if (rawL.includes("-")) {
@@ -245,8 +257,9 @@
                         
                         <div class="id-qr"><div id="qr-${i}"></div></div>
 
-                        <div class="id-lembaga-full" style="color: #666; font-size: 9pt;">${kota}</div>
-                        <div class="id-lembaga-full" style="font-weight:bold;">${sekolah}</div>
+                        <div class="id-lembaga-full">${kota}</div>
+                        
+                        <div class="id-lembaga-full">${sekolah}</div>
                     </div>
 
                     <div class="nama-box">${(p['Nama Lengkap (Sesuai Akta)'] || '').toUpperCase()}</div>
@@ -258,8 +271,8 @@
                                 <tr>
                                     <td class="col-no">${idx+1}</td>
                                     <td class="col-materi">${m}</td>
-                                    <td style="width:17.5%; border-right:1px solid #000; vertical-align:top; font-size:7pt; color:#ccc;">${(idx%2===0)?(idx+1):''}</td>
-                                    <td style="width:17.5%; vertical-align:top; font-size:7pt; color:#ccc;">${(idx%2!==0)?(idx+1):''}</td>
+                                    <td style="width:17.5%; border-right:1px solid #000; vertical-align:top; font-size:7pt; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
+                                    <td style="width:17.5%; vertical-align:top; font-size:7pt; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -272,7 +285,8 @@
         function generateQR(txt, id) {
             setTimeout(() => {
                 const el = document.getElementById(id);
-                if (el) new QRCode(el, { text: txt || "N/A", width: 75, height: 75 });
+                // Ukuran QR disesuaikan sedikit agar pas di area 2.6cm
+                if (el) new QRCode(el, { text: txt || "N/A", width: 72, height: 72 });
             }, 100);
         }
 
