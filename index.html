@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Kontrol Peserta (Final Fix HTTPS)</title>
+    <title>Kartu Kontrol Peserta (Fix Kolom Nomor)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -50,7 +50,7 @@
         /* 2. AREA KARTU (1/4 HALAMAN)                       */
         /* ================================================= */
         .card-wrapper {
-            padding: 5mm; /* Margin luar agar aman saat potong */
+            padding: 5mm; 
             box-sizing: border-box;
             display: flex;
         }
@@ -107,7 +107,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 12pt;
+            font-size: 14pt; 
             font-family: 'Courier New', monospace;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -122,7 +122,7 @@
         .photo-area {
             width: 2.8cm;
             height: 3.8cm;
-            background: #eee; /* Placeholder warna abu jika foto loading */
+            background: #eee;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -138,7 +138,7 @@
             line-height: 1.5;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: center; 
         }
         
         .qr-area {
@@ -187,7 +187,7 @@
         @media print {
             body { background-color: white; padding: 0; display: block; }
             .page-container { margin: 0; box-shadow: none; border: none; }
-            #loading { display: none; }
+            #loading, #error-msg { display: none; }
             .nomor-box { background-color: #FFC000 !important; -webkit-print-color-adjust: exact; }
             th { background-color: #ccc !important; -webkit-print-color-adjust: exact; }
         }
@@ -196,8 +196,7 @@
 <body>
 
     <div id="loading" style="text-align: center; margin-top: 50px; color: white;">
-        <h3>Memuat Data... Mohon Tunggu.</h3>
-        <p style="font-size: small;">Jika tidak muncul, pastikan Sheet ID benar dan di-share "Anyone with the link".</p>
+        <h3>Memuat Data...</h3>
     </div>
     <div id="error-msg" style="text-align: center; margin-top: 20px; color: yellow; display: none;"></div>
     <div id="main-output"></div>
@@ -205,7 +204,6 @@
     <script>
         const SHEET_ID = '1eIcvIgCLWG3F9jQdsw5XN9llOsK2PoYWKUg1qaQJyyA';
         const SHEET_NAME = 'Biodata Cek';
-        // Menggunakan encodeURIComponent untuk menangani spasi dengan aman
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
         
         const LOGO_FILENAME = "QIRAATI.png"; 
@@ -214,8 +212,6 @@
         const loading = document.getElementById('loading');
         const errorMsg = document.getElementById('error-msg');
 
-        // Fungsi Convert Google Drive Link ke Direct Image (HTTPS & Format LH3)
-        // Format LH3 biasanya lebih cepat dan stabil untuk hosting gambar publik
         function getDirectDriveUrl(url) {
             if (!url) return '';
             const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -227,38 +223,25 @@
 
         async function fetchSheetData() {
             try {
-                console.log("Fetching data from:", SHEET_URL);
                 const response = await fetch(SHEET_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
-                }
-                
+                if (!response.ok) throw new Error("Gagal mengambil data");
                 const csvText = await response.text();
                 processCSV(csvText);
             } catch (error) {
-                console.error("Fetch error:", error);
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `<h3>Gagal Mengambil Data</h3><p>${error.message}</p>`;
+                errorMsg.innerHTML = `Error: ${error.message}`;
             }
         }
 
         function processCSV(csvText) {
             const rows = csvText.trim().split('\n').filter(r => r.trim().length > 0);
-            
-            if (rows.length < 2) {
-                loading.style.display = 'none';
-                errorMsg.style.display = 'block';
-                errorMsg.innerText = "Data Kosong atau Nama Sheet Salah.";
-                return;
-            }
+            if (rows.length < 2) return;
 
             const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
             const allParticipants = [];
 
             for (let i = 1; i < rows.length; i++) {
-                // Regex untuk memisahkan CSV dengan benar (mengabaikan koma dalam tanda kutip)
                 const rowData = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
                 let p = {};
                 rowData.forEach((val, idx) => {
@@ -287,23 +270,17 @@
                 currentPageDiv.appendChild(cardElement);
                 countInPage++;
 
-                // Generate QR Code dengan aman
                 setTimeout(() => {
                     const el = document.getElementById(`qr-${index}`);
                     if(el) {
-                        try {
-                            el.innerHTML = ""; // Bersihkan isi lama
-                            new QRCode(el, {
-                                text: data['ID Pendaftaran'] || 'NODATA',
-                                width: 80, height: 80,
-                                correctLevel: QRCode.CorrectLevel.L
-                            });
-                        } catch (e) {
-                            console.error("QR Error:", e);
-                            el.innerText = "QR Err";
-                        }
+                        el.innerHTML = "";
+                        new QRCode(el, {
+                            text: data['ID Pendaftaran'] || 'NODATA',
+                            width: 80, height: 80,
+                            correctLevel: QRCode.CorrectLevel.L
+                        });
                     }
-                }, 100); // Delay sedikit untuk memastikan elemen ada
+                }, 100);
             });
 
             if (currentPageDiv.hasChildNodes()) {
@@ -322,15 +299,19 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'card-wrapper';
 
-            // Mapping Data dengan Fallback (Mencegah undefined)
-            const NOMOR = data['Nomor'] || data['NO'] || '..';
+            // --- PENGAMBILAN DATA ---
+            
+            // 1. Nomor (Dari Kolom NOMOR)
+            const rawNomor = data['NOMOR'] || data['Nomor'] || '';
+            const NOMOR = rawNomor ? String(rawNomor).padStart(3, '0') : '';
+
+            // 2. Data Lain
             const GEL = data['Gelombang'] || '-';
             const SHIFT = data['Shift'] || '-';
             const LEMBAGA = data['Asal Lembaga / TPQ'] || '-';
             const ID_EBTAQ = data['ID Pendaftaran'] || '-';
             const NAMA = (data['Nama Lengkap (Sesuai Akta)'] || '').toUpperCase();
             
-            // Proses Foto
             const rawFoto = data['Kirim Pas Foto Ukuran PostCard'] || '';
             const FOTO = getDirectDriveUrl(rawFoto);
 
@@ -357,10 +338,10 @@
                         </div>
 
                         <div class="info-area">
-                            <div>Gel._: ${GEL}</div>
+                            <div style="font-weight:bold;">ID. ${ID_EBTAQ}</div>
+                            <div style="margin-top:3px;">Gel._: ${GEL}</div>
                             <div style="margin-top:3px;">Shift: ${SHIFT}</div>
                             <div style="margin-top:3px;">${LEMBAGA}</div>
-                            <div style="margin-top:3px; font-weight:bold;">ID. ${ID_EBTAQ}</div>
                         </div>
 
                         <div class="qr-area">
