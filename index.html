@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Kontrol EBTAQ - Ratio 3:4 Fix</title>
+    <title>Kartu Kontrol EBTAQ - Final Polish</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -46,35 +46,39 @@
             position: relative;
         }
 
-        /* Header */
+        /* HEADER PROPORSIONAL (POINT 1) */
         .header {
             display: flex; align-items: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 4px; margin-bottom: 8px;
+            padding-bottom: 5px; margin-bottom: 8px;
+            height: 1.5cm; /* Tinggi fix agar elemen di dalamnya vertical align pas */
         }
-        .logo { width: 45px; height: 45px; }
+        .logo { width: 50px; height: 50px; display:flex; align-items:center; }
         .logo img { width: 100%; height: 100%; object-fit: contain; }
-        .title-group { flex: 1; text-align: center; font-family: "Times New Roman", serif; line-height: 1.1; }
+        
+        .title-group { 
+            flex: 1; text-align: center; font-family: "Times New Roman", serif; 
+            display: flex; flex-direction: column; justify-content: center;
+            line-height: 1.2; /* Spasi antar baris judul */
+        }
+        .t1 { font-size: 11pt; font-weight: bold; }
+        .t2 { font-size: 10pt; font-weight: bold; margin: 2px 0; }
+        .t3 { font-size: 11pt; font-weight: bold; }
+
         .nomor-box {
-            width: 40px; height: 30px; background-color: #FFC000;
+            width: 45px; height: 35px; background-color: #FFC000;
             border: 2px solid #000; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 14pt; font-family: 'Courier New', monospace;
+            font-weight: bold; font-size: 16pt; font-family: 'Courier New', monospace;
             -webkit-print-color-adjust: exact;
         }
 
         /* ================================================= */
-        /* 3. GRID IDENTITAS (RASIO 3:4 & AUTO WIDTH)        */
+        /* 3. GRID IDENTITAS (Rasio 3:4)                     */
         /* ================================================= */
         .identity-grid {
             display: grid;
-            /* Kolom 1 (Foto): 2.45cm (Hitungan 3x4 dari tinggi 3.25cm) */
-            /* Kolom 2 (Data): Auto (Mengambil sisa ruang) */
-            /* Kolom 3 (QR): 2.6cm (Tetap) */
             grid-template-columns: 2.45cm auto 2.6cm; 
-            
-            /* Tinggi Baris: 5 baris x 0.65cm = Total 3.25cm */
             grid-template-rows: repeat(5, 0.65cm); 
-            
             width: 100%;
             margin-bottom: 8px;
         }
@@ -89,13 +93,10 @@
         .id-text-row {
             grid-column: 2;
             padding-left: 10px; 
-            font-size: 11pt; 
-            font-weight: bold; 
+            font-size: 11pt; font-weight: bold; 
             display: flex; align-items: center;
             border-bottom: 1px dotted #ccc;
-            white-space: nowrap; /* Mencegah teks turun baris */
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .id-qr {
@@ -107,17 +108,15 @@
         .id-lembaga-full {
             grid-column: 2 / span 2; 
             padding-left: 10px; 
-            font-size: 11pt; /* Font disamakan (Besar) */
-            font-weight: bold; /* Tebal (Bold) */
+            font-size: 11pt; font-weight: bold; 
             display: flex; align-items: center;
             border-bottom: 1px dotted #ccc;
             white-space: nowrap;
         }
 
-        /* Nama Peserta (Tinggi dikurangi untuk 2 baris) */
+        /* Nama Peserta (2 Baris) */
         .nama-box {
-            height: 1.1cm; /* Cukup untuk 2 baris */
-            width: 100%;
+            height: 1.1cm; width: 100%;
             display: flex; align-items: center; justify-content: center;
             text-align: center; font-weight: bold; font-size: 12pt;
             text-transform: uppercase; line-height: 1.1;
@@ -127,12 +126,28 @@
             overflow: hidden;
         }
 
-        /* Tabel Penilaian */
-        table { width: 100%; border-collapse: collapse; border: 2px solid #000; flex: 1; }
-        th, td { border: 1px solid #000; padding: 2px 4px; font-size: 9pt; }
-        th { background-color: #ccc; font-weight: bold; text-align: center; -webkit-print-color-adjust: exact; }
-        .col-no { width: 25px; text-align: center; }
-        .col-materi { font-weight: bold; }
+        /* TABEL PENILAIAN (POINT 2 & 3) */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border: 2px solid #000; 
+            flex: 1; /* Mengisi sisa ruang ke bawah */
+        }
+        th, td { 
+            border: 1px solid #000; 
+            padding: 3px 4px; /* Padding sedikit ditambah */
+            font-size: 11pt;  /* Ukuran font diperbesar (Point 2) */
+        }
+        th { 
+            background-color: #ccc; 
+            font-weight: bold; 
+            text-align: center; 
+            -webkit-print-color-adjust: exact; 
+        }
+        
+        .col-no { width: 8%; text-align: center; } /* Lebar No */
+        .col-materi { font-weight: bold; }         /* Materi Auto */
+        .col-paraf { width: 20%; }                 /* Lebar Paraf Seimbang (Point 3) */
 
         @media print {
             body { background: white; padding: 0; }
@@ -222,7 +237,7 @@
             else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
             else if (sVal === "3") shiftDisplay = "Shift III (10.00 WIB)";
 
-            // Lembaga (Kota Bold, Sekolah Bold, Limit 50)
+            // Lembaga
             const rawL = p['Asal Lembaga / TPQ'] || '-';
             let kota = "", sekolah = rawL;
             if (rawL.includes("-")) {
@@ -265,14 +280,21 @@
                     <div class="nama-box">${(p['Nama Lengkap (Sesuai Akta)'] || '').toUpperCase()}</div>
 
                     <table>
-                        <thead><tr><th class="col-no">NO</th><th>MATERI</th><th colspan="2">PARAF PENGUJI</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th class="col-no">NO</th>
+                                <th>MATERI</th>
+                                <th class="col-paraf">PARAF</th>
+                                <th class="col-paraf">PARAF</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             ${["FASHOHAH","TARTIL","GHARIB","TAJWID","DDH","SSP","SHOLAT","WUDHU"].map((m, idx) => `
                                 <tr>
                                     <td class="col-no">${idx+1}</td>
                                     <td class="col-materi">${m}</td>
-                                    <td style="width:17.5%; border-right:1px solid #000; vertical-align:top; font-size:7pt; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
-                                    <td style="width:17.5%; vertical-align:top; font-size:7pt; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
+                                    <td style="border-right:1px solid #000; vertical-align:top; font-size:9pt; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
+                                    <td style="vertical-align:top; font-size:9pt; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -285,7 +307,7 @@
         function generateQR(txt, id) {
             setTimeout(() => {
                 const el = document.getElementById(id);
-                // Ukuran QR disesuaikan sedikit agar pas di area 2.6cm
+                // Ukuran QR disesuaikan
                 if (el) new QRCode(el, { text: txt || "N/A", width: 72, height: 72 });
             }, 100);
         }
