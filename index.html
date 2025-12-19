@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Kontrol EBTAQ - Final Precision Layout</title>
+    <title>Kartu Kontrol EBTAQ - Final Precision</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -63,17 +63,16 @@
         }
 
         /* ================================================= */
-        /* 3. LOGIKA GRID IDENTITAS (NESTED)                 */
+        /* 3. GRID IDENTITAS (NARRATIVE STYLE)               */
         /* ================================================= */
         .identity-grid {
             display: grid;
-            grid-template-columns: 3cm auto 2.8cm; /* Foto | Data | QR */
-            grid-template-rows: repeat(5, 0.75cm); /* 5 Baris seragam */
+            grid-template-columns: 2.8cm auto 2.6cm; 
+            grid-template-rows: repeat(5, 0.65cm); 
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
-        /* Foto: Baris 1-5 di Kiri */
         .id-photo {
             grid-column: 1; grid-row: 1 / span 5;
             background: #eee; border: 1px solid #ccc;
@@ -81,34 +80,39 @@
         }
         .id-photo img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Teks Baris 1-3 (Tengah) */
         .id-text-row {
             grid-column: 2;
-            padding-left: 8px; font-size: 9pt;
+            padding-left: 10px; 
+            font-size: 11pt; 
+            font-weight: bold; 
             display: flex; align-items: center;
+            border-bottom: 1px dotted #ccc;
         }
 
-        /* QR Code: Baris 1-3 di Kanan */
         .id-qr {
             grid-column: 3; grid-row: 1 / span 3;
             display: flex; justify-content: flex-end; align-items: flex-start;
+            border-bottom: 1px dotted #ccc;
         }
 
-        /* Lembaga (Baris 4 & 5): Melebar dari Kolom Tengah ke Kanan */
         .id-lembaga-full {
-            grid-column: 2 / span 2; /* Melebar melewati area QR */
-            padding-left: 8px; font-size: 9pt;
+            grid-column: 2 / span 2; 
+            padding-left: 10px; 
+            font-size: 10.5pt;
             display: flex; align-items: center;
+            border-bottom: 1px dotted #ccc;
             white-space: nowrap;
         }
 
         /* Nama Peserta */
         .nama-box {
-            height: 1.5cm; width: 100%;
+            height: 1.6cm; width: 100%;
             display: flex; align-items: center; justify-content: center;
-            text-align: center; font-weight: bold; font-size: 11pt;
-            text-transform: uppercase; line-height: 1.2;
+            text-align: center; font-weight: bold; font-size: 12pt;
+            text-transform: uppercase; line-height: 1.1;
             margin-bottom: 5px;
+            background-color: #f2f2f2;
+            -webkit-print-color-adjust: exact;
         }
 
         /* Tabel Penilaian */
@@ -122,13 +126,14 @@
             body { background: white; padding: 0; }
             .page-container { margin: 0; box-shadow: none; border: none; }
             #loading { display: none; }
+            .id-text-row, .id-lembaga-full, .id-qr { border-bottom: 1px dotted #ccc !important; }
         }
     </style>
 </head>
 <body>
 
     <div id="loading" style="text-align: center; margin-top: 50px; color: white;">
-        <h3>Memproses Kartu EBTAQ...</h3>
+        <h3>Menyusun Kartu EBTAQ...</h3>
     </div>
     <div id="main-output"></div>
 
@@ -176,8 +181,7 @@
                     document.getElementById('main-output').appendChild(currentContainer);
                     currentContainer = createPage();
                 }
-                const card = createCard(p, i);
-                currentContainer.appendChild(card);
+                currentContainer.appendChild(createCard(p, i));
                 generateQR(p['ID Pendaftaran'], `qr-${i}`);
             });
             document.getElementById('main-output').appendChild(currentContainer);
@@ -194,18 +198,29 @@
             const wrap = document.createElement('div');
             wrap.className = 'card-wrapper';
             
-            // --- SPLIT LOGIC LEMBAGA ---
-            const rawLembaga = p['Asal Lembaga / TPQ'] || '-';
-            let kota = "", sekolah = rawLembaga;
-            if (rawLembaga.includes("-")) {
-                const parts = rawLembaga.split("-");
-                kota = parts[0].trim();
-                sekolah = parts.slice(1).join("-").trim();
-            }
-            if (sekolah.length > 20) { sekolah = sekolah.substring(0, 16) + " ..."; }
+            // --- TRANSFORMASI DATA ---
+            
+            // 1. Gelombang: Tetap Angka Biasa
+            const gelombangText = `Gelombang ${p['Gelombang'] || '-'}`;
 
-            const noRaw = p['NOMOR'] || p['Nomor'] || (i + 1);
-            const noPad = String(noRaw).padStart(3, '0');
+            // 2. Shift: Konversi ke Romawi + Jam
+            const sVal = String(p['Shift']).trim();
+            let shiftDisplay = `Shift ${sVal}`; 
+            if (sVal === "1") shiftDisplay = "Shift I (07.00 WIB)";
+            else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
+            else if (sVal === "3") shiftDisplay = "Shift III (10.00 WIB)";
+
+            // 3. Lembaga: Split & Batas 50 karakter
+            const rawL = p['Asal Lembaga / TPQ'] || '-';
+            let kota = "", sekolah = rawL;
+            if (rawL.includes("-")) {
+                const pts = rawL.split("-");
+                kota = pts[0].trim();
+                sekolah = pts.slice(1).join("-").trim();
+            }
+            if (sekolah.length > 50) { sekolah = sekolah.substring(0, 46) + " ..."; }
+
+            const noPad = String(p['NOMOR'] || p['Nomor'] || (i + 1)).padStart(3, '0');
 
             wrap.innerHTML = `
                 <div class="card-frame">
@@ -222,13 +237,15 @@
                     <div class="identity-grid">
                         <div class="id-photo"><img src="${getDirectDriveUrl(p['Kirim Pas Foto Ukuran PostCard'])}" onerror="this.style.display='none'"></div>
                         
-                        <div class="id-text-row" style="font-weight:bold;">ID. ${p['ID Pendaftaran'] || '-'}</div>
-                        <div class="id-text-row">Gel._: ${p['Gelombang'] || '-'}</div>
-                        <div class="id-text-row">Shift: ${p['Shift'] || '-'}</div>
+                        <div class="id-text-row">${p['ID Pendaftaran'] || '-'}</div>
+                        
+                        <div class="id-text-row">${gelombangText}</div>
+                        
+                        <div class="id-text-row">${shiftDisplay}</div>
                         
                         <div class="id-qr"><div id="qr-${i}"></div></div>
 
-                        <div class="id-lembaga-full" style="font-size: 8pt; color: #555;">${kota}</div>
+                        <div class="id-lembaga-full" style="color: #666; font-size: 9pt;">${kota}</div>
                         <div class="id-lembaga-full" style="font-weight:bold;">${sekolah}</div>
                     </div>
 
@@ -241,8 +258,8 @@
                                 <tr>
                                     <td class="col-no">${idx+1}</td>
                                     <td class="col-materi">${m}</td>
-                                    <td style="width:17%; border-right:1px solid #000; vertical-align:top; font-size:7pt;">${(idx%2===0)?(idx+1):''}</td>
-                                    <td style="width:17%; vertical-align:top; font-size:7pt;">${(idx%2!==0)?(idx+1):''}</td>
+                                    <td style="width:17.5%; border-right:1px solid #000; vertical-align:top; font-size:7pt; color:#ccc;">${(idx%2===0)?(idx+1):''}</td>
+                                    <td style="width:17.5%; vertical-align:top; font-size:7pt; color:#ccc;">${(idx%2!==0)?(idx+1):''}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -255,7 +272,7 @@
         function generateQR(txt, id) {
             setTimeout(() => {
                 const el = document.getElementById(id);
-                if (el) new QRCode(el, { text: txt || "N/A", width: 70, height: 70 });
+                if (el) new QRCode(el, { text: txt || "N/A", width: 75, height: 75 });
             }, 100);
         }
 
