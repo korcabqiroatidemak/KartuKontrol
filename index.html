@@ -3,86 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu EBTAQ (Final)</title>
+    <title>Cetak Kartu EBTAQ (Fix Page Break)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         /* ================================================= */
-        /* 1. SETUP TAMPILAN LAYAR (SCREEN)                  */
+        /* 1. SETUP TAMPILAN LAYAR (SCREEN VIEW)             */
         /* ================================================= */
         body {
             font-family: Arial, sans-serif;
-            background-color: #525659; /* Latar belakang gelap */
-            margin: 0; 
-            padding: 40px 0; /* Padding atas-bawah lebih lega */
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            gap: 40px; /* Jarak antar halaman di layar */
+            background-color: #525659; /* Background Abu Gelap */
+            margin: 0;
+            padding: 40px 0;
+            text-align: center; /* Agar margin auto bekerja baik */
         }
 
-        /* LABEL HALAMAN (Hanya di Layar) */
+        /* Label Halaman (View Only) */
         .page-label {
+            display: inline-block;
+            background-color: #333;
             color: #fff;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: -30px; /* Tempelkan dekat ke kertas */
-            z-index: 100;
-            background: rgba(0,0,0,0.5);
             padding: 5px 15px;
-            border-radius: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px; /* Jarak label ke kertas */
+            margin-top: 20px;
         }
 
-        /* KONTAINER KERTAS F4 */
+        /* CONTAINER KERTAS F4 (REFERENSI ANDA) */
         .page-container {
             background-color: white;
-            width: 215mm; 
+            width: 215mm;
             height: 330mm;
-            position: relative;
             
-            /* Efek Kertas Melayang */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            /* Referensi CSS Anda: Margin Auto & Shadow */
+            margin: 0 auto 50px auto; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            box-sizing: border-box;
             
+            /* Grid 2x2 */
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            box-sizing: border-box;
+            
+            /* Penting untuk Print */
+            page-break-after: always;
+            position: relative;
             overflow: hidden;
+            text-align: left; /* Reset text align isi konten */
         }
 
         /* Garis Potong */
         .cut-line-v { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px dashed #999; z-index: 10; }
         .cut-line-h { position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed #999; z-index: 10; }
 
+
         /* ================================================= */
-        /* 2. SETUP CETAK (PRINT - Ctrl+P)                   */
+        /* 2. SETUP CETAK (PRINT VIEW - Ctrl+P)              */
         /* ================================================= */
         @media print {
-            body { 
-                background: none; 
-                padding: 0; 
-                gap: 0; 
-                display: block; 
+            body {
+                background: none;
+                padding: 0;
+                margin: 0;
             }
-            .page-label { 
-                display: none !important; /* Sembunyikan Label Halaman */ 
+            
+            /* Hilangkan Label Halaman saat Print */
+            .page-label {
+                display: none !important;
             }
-            .page-container { 
-                margin: 0; 
-                box-shadow: none; 
-                border: none; 
+
+            .page-container {
+                width: 215mm;
+                height: 330mm;
+                margin: 0; /* Margin 0 saat print */
+                box-shadow: none;
+                border: none;
                 page-break-after: always; /* Paksa ganti halaman */
             }
-            #loading, #error-msg { display: none; }
-            
-            /* Paksa Cetak Background/Border */
+
+            /* Paksa Cetak Background & Border */
             .id-text-row, .id-lembaga-full, .id-qr { border-bottom: 1px dotted #ccc !important; }
             .nomor-box { background-color: #FFC000 !important; -webkit-print-color-adjust: exact; }
             th { background-color: #ccc !important; -webkit-print-color-adjust: exact; }
+            .nama-box { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
         }
 
+
         /* ================================================= */
-        /* 3. DESAIN KARTU                                   */
+        /* 3. DESAIN KARTU (LAYOUT FINAL)                    */
         /* ================================================= */
         .card-wrapper { padding: 5mm; box-sizing: border-box; display: flex; }
 
@@ -94,7 +104,7 @@
             position: relative;
         }
 
-        /* Header Proporsional */
+        /* HEADER */
         .header {
             display: flex; align-items: center;
             border-bottom: 2px solid #000;
@@ -103,7 +113,6 @@
         }
         .logo { width: 50px; height: 50px; display:flex; align-items:center; }
         .logo img { width: 100%; height: 100%; object-fit: contain; }
-        
         .title-group { 
             flex: 1; text-align: center; font-family: "Times New Roman", serif; 
             display: flex; flex-direction: column; justify-content: center;
@@ -112,7 +121,6 @@
         .t1 { font-size: 11pt; font-weight: bold; }
         .t2 { font-size: 10pt; font-weight: bold; margin: 2px 0; }
         .t3 { font-size: 11pt; font-weight: bold; }
-
         .nomor-box {
             width: 45px; height: 35px; background-color: #FFC000;
             border: 2px solid #000; display: flex; align-items: center; justify-content: center;
@@ -120,45 +128,36 @@
             -webkit-print-color-adjust: exact;
         }
 
-        /* Identity Grid (3:4 Ratio) */
+        /* IDENTITY GRID */
         .identity-grid {
             display: grid;
             grid-template-columns: 2.45cm auto 2.6cm; 
             grid-template-rows: repeat(5, 0.65cm); 
             width: 100%; margin-bottom: 8px;
         }
-
         .id-photo {
             grid-column: 1; grid-row: 1 / span 5;
             background: #eee; border: 1px solid #ccc;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
         }
         .id-photo img { width: 100%; height: 100%; object-fit: cover; }
-
         .id-text-row {
-            grid-column: 2;
-            padding-left: 10px; 
-            font-size: 11pt; font-weight: bold; 
-            display: flex; align-items: center;
-            border-bottom: 1px dotted #ccc;
+            grid-column: 2; padding-left: 10px; font-size: 11pt; font-weight: bold; 
+            display: flex; align-items: center; border-bottom: 1px dotted #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
         .id-qr {
             grid-column: 3; grid-row: 1 / span 3;
             display: flex; justify-content: flex-end; align-items: flex-start;
             border-bottom: 1px dotted #ccc;
         }
-
         .id-lembaga-full {
-            grid-column: 2 / span 2; 
-            padding-left: 10px; 
-            font-size: 11pt; font-weight: bold; 
-            display: flex; align-items: center;
-            border-bottom: 1px dotted #ccc;
+            grid-column: 2 / span 2; padding-left: 10px; font-size: 11pt; font-weight: bold; 
+            display: flex; align-items: center; border-bottom: 1px dotted #ccc;
             white-space: nowrap;
         }
 
+        /* NAMA PESERTA */
         .nama-box {
             height: 1.1cm; width: 100%;
             display: flex; align-items: center; justify-content: center;
@@ -168,6 +167,7 @@
             -webkit-print-color-adjust: exact; overflow: hidden;
         }
 
+        /* TABEL */
         table { width: 100%; border-collapse: collapse; border: 2px solid #000; flex: 1; }
         th, td { border: 1px solid #000; padding: 3px 4px; font-size: 11pt; }
         th { background-color: #ccc; font-weight: bold; text-align: center; -webkit-print-color-adjust: exact; }
@@ -221,34 +221,34 @@
         function renderCards(participants) {
             const perPage = 4;
             let currentContainer = createPage();
-            let pageCount = 1;
+            let pageIndex = 1;
 
             participants.forEach((p, i) => {
+                // Jika sudah 4 kartu, push container sebelumnya ke DOM
                 if (i > 0 && i % perPage === 0) {
-                    // Masukkan halaman sebelumnya ke output
-                    appendPage(currentContainer, pageCount);
-                    pageCount++;
+                    appendPageToDOM(currentContainer, pageIndex);
+                    pageIndex++;
                     currentContainer = createPage();
                 }
                 currentContainer.appendChild(createCard(p, i));
                 generateQR(p['ID Pendaftaran'], `qr-${i}`);
             });
             
-            // Masukkan halaman terakhir jika ada isinya
+            // Push container terakhir
             if (currentContainer.hasChildNodes()) {
-                appendPage(currentContainer, pageCount);
+                appendPageToDOM(currentContainer, pageIndex);
             }
         }
 
-        // Fungsi Helper untuk memasukkan Label + Halaman
-        function appendPage(container, num) {
+        // Fungsi Memasukkan Label Halaman + Kertas ke DOM
+        function appendPageToDOM(container, index) {
             const label = document.createElement('div');
             label.className = 'page-label';
-            label.innerText = `HALAMAN ${num}`;
+            label.innerText = `HALAMAN ${index}`;
             
-            const output = document.getElementById('main-output');
-            output.appendChild(label);
-            output.appendChild(container);
+            const mainOutput = document.getElementById('main-output');
+            mainOutput.appendChild(label);
+            mainOutput.appendChild(container);
         }
 
         function createPage() {
@@ -294,12 +294,10 @@
 
                     <div class="identity-grid">
                         <div class="id-photo"><img src="${getDirectDriveUrl(p['Kirim Pas Foto Ukuran PostCard'])}" onerror="this.style.display='none'"></div>
-                        
                         <div class="id-text-row">${p['ID Pendaftaran'] || '-'}</div>
                         <div class="id-text-row">${gelombangText}</div>
                         <div class="id-text-row">${shiftDisplay}</div>
                         <div class="id-qr"><div id="qr-${i}"></div></div>
-
                         <div class="id-lembaga-full">${kota}</div>
                         <div class="id-lembaga-full">${sekolah}</div>
                     </div>
