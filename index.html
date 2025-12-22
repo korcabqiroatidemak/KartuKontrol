@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu EBTAQ - Final Fix</title>
+    <title>Cetak Kartu EBTAQ - Rapi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -21,22 +21,38 @@
             box-shadow: 0 4px 15px rgba(0,0,0,.3); text-align: left;
             box-sizing: border-box;
         }
-        
+
+        /* PERBAIKAN: SEKARANG MENGGUNAKAN GRID UNTUK 3 BARIS */
         #shift-container {
-            border: 1px solid #ddd; padding: 12px;
-            display: flex; 
-            flex-wrap: nowrap; 
-            gap: 20px; 
-            background: #fafafa; margin-bottom: 15px; 
-            overflow-x: auto; 
-            white-space: nowrap;
+            border: 1px solid #ddd; 
+            padding: 15px;
+            background: #fafafa; 
+            margin-bottom: 15px; 
+            display: grid;
+            /* Membuat grid dengan kolom otomatis, minimal 200px per item */
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px;
+            max-height: 250px; /* Batasi tinggi jika sangat banyak */
+            overflow-y: auto;
         }
         
-        #shift-container::-webkit-scrollbar { height: 8px; }
-        #shift-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .cb-item { 
+            font-size: 13px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cb-item:hover { background: #f0f0f0; }
 
-        .cb-item { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .btn-generate { width: 100%; padding: 12px; font-weight: bold; background: #28a745; color: #fff; border: none; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
+        .btn-generate { 
+            width: 100%; padding: 12px; font-weight: bold; 
+            background: #28a745; color: #fff; border: none; 
+            cursor: pointer; border-radius: 4px; text-transform: uppercase; 
+        }
 
         .page-label {
             display: inline-block; background-color: #222; color: #fff;
@@ -93,9 +109,10 @@
 <body>
 
 <div class="control-panel">
-    <h3>Panel Kontrol – KARTU KONTROL</h3>
+    <h3>Panel Kontrol – KARTU EBTAQ</h3>
+    <p style="font-size: 12px; color: #666; margin-top: -10px;">Pilih Gelombang & Shift yang ingin dicetak:</p>
     <div id="shift-container">Memuat data Google Sheets…</div>
-    <button class="btn-generate" onclick="generate()">GENERATE KARTU</button>
+    <button class="btn-generate" onclick="generate()">GENERATE KARTU SEKARANG</button>
 </div>
 
 <div id="main-output"></div>
@@ -112,7 +129,7 @@
             const csvText = await response.text();
             processData(csvText);
         } catch (e) {
-            document.getElementById('shift-container').innerText = "Gagal memuat data.";
+            document.getElementById('shift-container').innerText = "Gagal memuat data dari Google Sheets.";
         }
     };
 
@@ -133,10 +150,13 @@
 
         const container = document.getElementById('shift-container');
         container.innerHTML = '';
+        
+        // Urutkan kunci agar rapi (Gel 1 Sft 1, Gel 1 Sft 2, dst)
         Object.keys(groupedData).sort().forEach(k => {
             const l = document.createElement('label');
             l.className = 'cb-item';
-            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${k.replace('-', ' SFT ')} (${groupedData[k].length})`;
+            const displayLabel = k.replace('-', ' - SFT ');
+            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${displayLabel} (${groupedData[k].length} Anak)`;
             container.appendChild(l);
         });
     }
@@ -152,6 +172,9 @@
         selected.forEach(cb => {
             allSelectedParticipants = allSelectedParticipants.concat(groupedData[cb.value]);
         });
+
+        // Urutkan berdasarkan NOMOR agar hasil cetak berurutan
+        allSelectedParticipants.sort((a, b) => parseInt(a.NOMOR) - parseInt(b.NOMOR));
 
         renderPages(allSelectedParticipants);
     }
@@ -202,13 +225,12 @@
             sekolah = pts.slice(1).join("-").trim();
         }
 
-        // --- FIX FOTO GOOGLE DRIVE ---
+        // Fix Foto Google Drive
         const rawF = p['KIRIM PAS FOTO UKURAN POSTCARD'] || '';
         const matchId = rawF.match(/[-\w]{25,}/); 
         let fSrc = "";
-        if (matchId && matchId[0]) {
-            // Menggunakan format preview googleusercontent yang lebih handal
-            fSrc = `https://lh3.googleusercontent.com/u/0/d/${matchId[0]}`;
+        if (matchId) {
+            fSrc = `https://lh3.googleusercontent.com/d/${matchId[0]}`;
         }
 
         wrap.innerHTML = `
@@ -224,7 +246,7 @@
                 </div>
                 <div class="identity-grid">
                     <div class="id-photo">
-                        ${fSrc ? `<img src="${fSrc}" alt="Foto" onerror="this.parentElement.innerHTML='<small>Tidak Ada Foto</small>';">` : '<small>3x4</small>'}
+                        ${fSrc ? `<img src="${fSrc}" alt="Foto" onerror="this.parentElement.innerHTML='<small>No Photo</small>';">` : '<small>3x4</small>'}
                     </div>
                     <div class="id-text-row">${p['ID PENDAFTARAN'] || '-'}</div>
                     <div class="id-text-row">Gelombang ${p['GELOMBANG'] || '-'}</div>
