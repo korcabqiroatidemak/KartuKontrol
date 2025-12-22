@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu EBTAQ - Panel Filter</title>
+    <title>Cetak Kartu EBTAQ - Final Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        /* ================================================= */
-        /* 1. SETUP TAMPILAN LAYAR & PANEL KONTROL          */
-        /* ================================================= */
         body {
             font-family: Arial, sans-serif;
             background-color: #525659;
@@ -17,34 +14,37 @@
             text-align: center;
         }
 
+        /* PANEL KONTROL 1 BARIS DENGAN SCROLLBAR */
         .control-panel {
-            background: #fff; width: 200mm; margin: 20px auto;
+            background: #fff; width: 215mm; margin: 20px auto;
             padding: 20px 25px; border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,.3); text-align: left;
+            box-sizing: border-box;
         }
-        .row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .control-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 12px; font-weight: bold; }
-        input, select { padding: 8px 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
-
+        
         #shift-container {
-            border: 1px solid #ddd; padding: 10px;
-            display: grid; grid-template-rows: repeat(3, auto);
-            grid-auto-flow: column; gap: 8px 25px; 
-            background: #fafafa; margin-bottom: 15px; max-height: 150px; overflow-y: auto;
+            border: 1px solid #ddd; padding: 12px;
+            display: flex; 
+            flex-wrap: nowrap; 
+            gap: 20px; 
+            background: #fafafa; margin-bottom: 15px; 
+            overflow-x: auto; 
+            white-space: nowrap;
         }
-        .cb-item { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        
+        #shift-container::-webkit-scrollbar { height: 8px; }
+        #shift-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+        .cb-item { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .btn-generate { width: 100%; padding: 12px; font-weight: bold; background: #28a745; color: #fff; border: none; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
 
         .page-label {
             display: inline-block; background-color: #222; color: #fff;
             padding: 4px 12px; border-radius: 4px; font-size: 13px;
-            font-weight: bold; margin-bottom: 5px;
+            font-weight: bold; margin-bottom: 5px; margin-top: 20px;
         }
 
-        /* ================================================= */
-        /* 2. SETUP KERTAS & CETAK (ADAPTASI KARTUKONTROL)  */
-        /* ================================================= */
+        /* LAYOUT KERTAS */
         .page-container {
             background-color: white; width: 215mm; height: 330mm;
             margin: 0 auto 15px auto; box-sizing: border-box;
@@ -58,13 +58,13 @@
         @media print {
             body { background: none; }
             .control-panel, .page-label { display: none !important; }
-            .page-container { margin: 0; box-shadow: none; }
+            .page-container { margin: 0; box-shadow: none; border: none; }
             .nomor-box { background-color: #FFC000 !important; -webkit-print-color-adjust: exact; }
             th { background-color: #ccc !important; -webkit-print-color-adjust: exact; }
             .nama-box { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
         }
 
-        /* DESAIN KARTU (TETAP SAMA) */
+        /* DESAIN KARTU */
         .card-wrapper { padding: 5mm; box-sizing: border-box; display: flex; }
         .card-frame { border: 2px solid #000080; width: 100%; height: 100%; padding: 5px; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
         .header { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; height: 1.5cm; }
@@ -75,13 +75,15 @@
         .t2 { font-size: 10pt; font-weight: bold; }
         .t3 { font-size: 11pt; font-weight: bold; }
         .nomor-box { width: 45px; height: 35px; background-color: #FFC000; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16pt; font-family: 'Courier New', monospace; }
+        
         .identity-grid { display: grid; grid-template-columns: 2.45cm auto 2.6cm; grid-template-rows: repeat(5, 0.65cm); width: 100%; margin-bottom: 8px; }
         .id-photo { grid-column: 1; grid-row: 1 / span 5; background: #eee; border: 1px solid #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .id-photo img { width: 100%; height: 100%; object-fit: cover; }
-        .id-text-row { grid-column: 2; padding-left: 10px; font-size: 11pt; font-weight: bold; display: flex; align-items: center; border-bottom: 1px dotted #ccc; overflow: hidden; }
+        .id-text-row { grid-column: 2; padding-left: 10px; font-size: 11pt; font-weight: bold; display: flex; align-items: center; border-bottom: 1px dotted #ccc; white-space: nowrap; overflow: hidden; }
         .id-qr { grid-column: 3; grid-row: 1 / span 3; display: flex; justify-content: flex-end; align-items: flex-start; border-bottom: 1px dotted #ccc; }
-        .id-lembaga-full { grid-column: 2 / span 2; padding-left: 10px; font-size: 11pt; font-weight: bold; display: flex; align-items: center; border-bottom: 1px dotted #ccc; }
-        .nama-box { height: 1.1cm; width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 12pt; text-transform: uppercase; margin-bottom: 5px; background-color: #f2f2f2; }
+        .id-lembaga-full { grid-column: 2 / span 2; padding-left: 10px; font-size: 11pt; font-weight: bold; display: flex; align-items: center; border-bottom: 1px dotted #ccc; white-space: nowrap; overflow: hidden; }
+        
+        .nama-box { height: 1.1cm; width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 12pt; text-transform: uppercase; margin-bottom: 5px; background-color: #f2f2f2; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; border: 2px solid #000; flex: 1; }
         th, td { border: 1px solid #000; padding: 2px 4px; font-size: 10pt; }
         th { background-color: #ccc; }
@@ -104,7 +106,6 @@
     const LOGO_FILENAME = "QIRAATI.png";
     let groupedData = {};
 
-    // 1. Ambil Data Awal
     window.onload = async () => {
         try {
             const response = await fetch(SHEET_URL);
@@ -115,7 +116,6 @@
         }
     };
 
-    // 2. Proses CSV & Kelompokkan seperti skrip datapeserta
     function processData(csv) {
         const rows = csv.trim().split('\n');
         const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim().toUpperCase());
@@ -124,7 +124,7 @@
         for (let i = 1; i < rows.length; i++) {
             const cols = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
             let p = {};
-            cols.forEach((v, j) => p[headers[j]] = v.replace(/"/g, '').trim());
+            cols.forEach((v, j) => p[headers[j]] = v ? v.replace(/"/g, '').trim() : '');
             
             const key = `${p['GELOMBANG'] || '-'}-${p['SHIFT'] || '-'}`;
             if (!groupedData[key]) groupedData[key] = [];
@@ -136,12 +136,11 @@
         Object.keys(groupedData).sort().forEach(k => {
             const l = document.createElement('label');
             l.className = 'cb-item';
-            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${k.replace('-', ' SFT ')} (${groupedData[k].length} Peserta)`;
+            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${k.replace('-', ' SFT ')} (${groupedData[k].length})`;
             container.appendChild(l);
         });
     }
 
-    // 3. Fungsi Generate Berdasarkan Pilihan
     function generate() {
         const selected = document.querySelectorAll('input[name="chk-shift"]:checked');
         if (selected.length === 0) return alert("Pilih minimal satu Gelombang/Shift!");
@@ -188,7 +187,7 @@
         wrap.className = 'card-wrapper';
 
         // Logika Shift
-        const sVal = String(p['SHIFT']).trim();
+        const sVal = String(p['SHIFT'] || '').trim();
         let shiftDisplay = `Shift ${sVal}`;
         if (sVal === "1") shiftDisplay = "Shift I (07.00 WIB)";
         else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
@@ -203,26 +202,32 @@
             sekolah = pts.slice(1).join("-").trim();
         }
 
-        // Link Foto
+        // --- FIX FOTO BERDASARKAN SKRIP ASLI ANDA ---
         const rawF = p['KIRIM PAS FOTO UKURAN POSTCARD'] || '';
         const matchId = rawF.match(/id=([a-zA-Z0-9_-]+)/);
-        const fSrc = matchId ? `https://lh3.googleusercontent.com/d/$${matchId[1]}` : '';
+        let fSrc = "";
+        if (matchId && matchId[1]) {
+            // Mengikuti pola skrip asli Anda: /0{id}
+            fSrc = `https://lh3.googleusercontent.com/d/$${matchId[1]}`;
+        }
 
         wrap.innerHTML = `
             <div class="card-frame">
                 <div class="header">
-                    <div class="logo"><img src="${LOGO_FILENAME}"></div>
+                    <div class="logo"><img src="${LOGO_FILENAME}" onerror="this.style.visibility='hidden'"></div>
                     <div class="title-group">
                         <div class="t1">KARTU KONTROL PESERTA</div>
                         <div class="t2">EVALUASI BELAJAR</div>
                         <div class="t3">TAHAP AKHIR QIROATI (EBTAQ)</div>
                     </div>
-                    <div class="nomor-box">${String(p['NOMOR']).padStart(3, '0')}</div>
+                    <div class="nomor-box">${String(p['NOMOR'] || '').padStart(3, '0')}</div>
                 </div>
                 <div class="identity-grid">
-                    <div class="id-photo">${fSrc ? `<img src="${fSrc}">` : ''}</div>
+                    <div class="id-photo">
+                        ${fSrc ? `<img src="${fSrc}" onerror="this.style.display='none';">` : '<small>3x4</small>'}
+                    </div>
                     <div class="id-text-row">${p['ID PENDAFTARAN'] || '-'}</div>
-                    <div class="id-text-row">Gelombang ${p['GELOMBANG']}</div>
+                    <div class="id-text-row">Gelombang ${p['GELOMBANG'] || '-'}</div>
                     <div class="id-text-row">${shiftDisplay}</div>
                     <div class="id-qr"><div id="qr-${i}"></div></div>
                     <div class="id-lembaga-full">${kota}</div>
@@ -238,8 +243,8 @@
                         <tr>
                             <td class="col-no">${idx+1}</td>
                             <td>${m}</td>
-                            <td style="width:20%; color:#aaa;">${(idx%2===0)?(idx+1):''}</td>
-                            <td style="width:20%; color:#aaa;">${(idx%2!==0)?(idx+1):''}</td>
+                            <td style="width:20%; color:#aaa; vertical-align:top; font-size:9pt;">${(idx%2===0)?(idx+1):''}</td>
+                            <td style="width:20%; color:#aaa; vertical-align:top; font-size:9pt;">${(idx%2!==0)?(idx+1):''}</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
@@ -250,8 +255,11 @@
     function generateQR(txt, id) {
         setTimeout(() => {
             const el = document.getElementById(id);
-            if (el) new QRCode(el, { text: txt || "N/A", width: 70, height: 70 });
-        }, 150);
+            if (el) {
+                el.innerHTML = "";
+                new QRCode(el, { text: txt || "N/A", width: 70, height: 70 });
+            }
+        }, 200);
     }
 </script>
 </body>
