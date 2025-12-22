@@ -14,7 +14,7 @@
             text-align: center;
         }
 
-        /* PANEL KONTROL 1 BARIS DENGAN SCROLLBAR */
+        /* PANEL KONTROL */
         .control-panel {
             background: #fff; width: 215mm; margin: 20px auto;
             padding: 20px 25px; border-radius: 8px;
@@ -202,13 +202,13 @@
             sekolah = pts.slice(1).join("-").trim();
         }
 
-        // --- FIX FOTO BERDASARKAN SKRIP ASLI ANDA ---
+        // --- FIX FOTO GOOGLE DRIVE ---
         const rawF = p['KIRIM PAS FOTO UKURAN POSTCARD'] || '';
-        const matchId = rawF.match(/id=([a-zA-Z0-9_-]+)/);
+        const matchId = rawF.match(/[-\w]{25,}/); 
         let fSrc = "";
-        if (matchId && matchId[1]) {
-            // Mengikuti pola skrip asli Anda: /0{id}
-            fSrc = `https://lh3.googleusercontent.com/d/$${matchId[1]}`;
+        if (matchId && matchId[0]) {
+            // Menggunakan format preview googleusercontent yang lebih handal
+            fSrc = `https://lh3.googleusercontent.com/u/0/d/${matchId[0]}`;
         }
 
         wrap.innerHTML = `
@@ -224,7 +224,7 @@
                 </div>
                 <div class="identity-grid">
                     <div class="id-photo">
-                        ${fSrc ? `<img src="${fSrc}" onerror="this.style.display='none';">` : '<small>3x4</small>'}
+                        ${fSrc ? `<img src="${fSrc}" alt="Foto" onerror="this.parentElement.innerHTML='<small>Tidak Ada Foto</small>';">` : '<small>3x4</small>'}
                     </div>
                     <div class="id-text-row">${p['ID PENDAFTARAN'] || '-'}</div>
                     <div class="id-text-row">Gelombang ${p['GELOMBANG'] || '-'}</div>
