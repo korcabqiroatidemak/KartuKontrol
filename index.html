@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu EBTAQ - Elegan & Ringkas</title>
+    <title>Cetak Kartu EBTAQ - Versi Final Sempurna</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
@@ -14,7 +14,7 @@
             text-align: center;
         }
 
-        /* PANEL KONTROL */
+        /* PANEL KONTROL ELEGAN */
         .control-panel {
             background: #fff; width: 215mm; margin: 20px auto;
             padding: 15px 20px; border-radius: 8px;
@@ -22,45 +22,41 @@
             box-sizing: border-box;
         }
 
-        /* AREA PILIHAN - LEBIH RENDAH & RAPAT */
         #shift-container {
             border: 1px solid #ddd; 
             padding: 8px;
             background: #fafafa; 
             margin-bottom: 12px; 
-            
             display: flex;
             flex-flow: column wrap; 
-            height: 85px;          /* Lebih rendah (pas untuk 3 baris rapat) */
-            
+            height: 85px;          /* Konsisten 3 baris rapat */
             overflow-x: auto;       
             overflow-y: hidden;     
-            gap: 0 15px;            /* Jarak antar kolom diperkecil */
+            gap: 0 15px;            
         }
 
-        /* Scrollbar Tipis */
         #shift-container::-webkit-scrollbar { height: 6px; }
         #shift-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         
         .cb-item { 
-            font-size: 12px;        /* Font sedikit lebih kecil */
+            font-size: 12px;
             cursor: pointer; 
             display: flex; 
             align-items: center; 
             gap: 6px; 
-            height: 26px;           /* Tinggi baris lebih rapat */
-            width: 190px;           /* Lebar kolom lebih ramping */
+            height: 26px;           
+            width: 190px;           
             flex-shrink: 0;         
             white-space: nowrap;
         }
 
         .btn-generate { 
-            width: 100%; padding: 10px; font-weight: bold; 
+            width: 100%; padding: 12px; font-weight: bold; 
             background: #28a745; color: #fff; border: none; 
             cursor: pointer; border-radius: 4px; text-transform: uppercase; 
         }
 
-        /* LAYOUT KERTAS */
+        /* LAYOUT KERTAS F4 */
         .page-label {
             display: inline-block; background-color: #222; color: #fff;
             padding: 4px 12px; border-radius: 4px; font-size: 13px;
@@ -115,11 +111,9 @@
 <body>
 
 <div class="control-panel">
-    <h3 style="margin: 0 0 5px 0; font-size: 18px;">Panel Kontrol – KARTU EBTAQ</h3>
-    <p style="font-size: 11px; color: #666; margin: 0 0 10px 0;">Pilih Gelombang & Shift (Scroll ke samping):</p>
-    
+    <h3 style="margin: 0 0 5px 0;">Panel Kontrol – KARTU EBTAQ</h3>
+    <p style="font-size: 11px; color: #666; margin-bottom: 10px;">Pilih Gelombang & Shift (Scroll ke samping jika banyak):</p>
     <div id="shift-container">Memuat data Google Sheets…</div>
-    
     <button class="btn-generate" onclick="generate()">GENERATE KARTU</button>
 </div>
 
@@ -158,12 +152,10 @@
 
         const container = document.getElementById('shift-container');
         container.innerHTML = '';
-        
         Object.keys(groupedData).sort().forEach(k => {
             const l = document.createElement('label');
             l.className = 'cb-item';
-            const displayLabel = k.replace('-', ' SFT ');
-            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${displayLabel} (${groupedData[k].length})`;
+            l.innerHTML = `<input type="checkbox" name="chk-shift" value="${k}"> Gel ${k.replace('-', ' SFT ')} (${groupedData[k].length})`;
             container.appendChild(l);
         });
     }
@@ -171,17 +163,12 @@
     function generate() {
         const selected = document.querySelectorAll('input[name="chk-shift"]:checked');
         if (selected.length === 0) return alert("Pilih minimal satu Gelombang/Shift!");
-
         const output = document.getElementById('main-output');
         output.innerHTML = '';
-
-        let allSelectedParticipants = [];
-        selected.forEach(cb => {
-            allSelectedParticipants = allSelectedParticipants.concat(groupedData[cb.value]);
-        });
-
-        allSelectedParticipants.sort((a, b) => parseInt(a.NOMOR) - parseInt(b.NOMOR));
-        renderPages(allSelectedParticipants);
+        let allParticipants = [];
+        selected.forEach(cb => { allParticipants = allParticipants.concat(groupedData[cb.value]); });
+        allParticipants.sort((a, b) => parseInt(a.NOMOR) - parseInt(b.NOMOR));
+        renderPages(allParticipants);
     }
 
     function renderPages(participants) {
@@ -215,10 +202,7 @@
         wrap.className = 'card-wrapper';
 
         const sVal = String(p['SHIFT'] || '').trim();
-        let shiftDisplay = `Shift ${sVal}`;
-        if (sVal === "1") shiftDisplay = "Shift I (07.00 WIB)";
-        else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
-        else if (sVal === "3") shiftDisplay = "Shift III (10.00 WIB)";
+        let shiftDisplay = sVal === "1" ? "Shift I (07.00 WIB)" : sVal === "2" ? "Shift II (08.30 WIB)" : sVal === "3" ? "Shift III (10.00 WIB)" : `Shift ${sVal}`;
 
         const rawL = p['ASAL LEMBAGA / TPQ'] || '-';
         let kota = "", sekolah = rawL;
@@ -228,13 +212,12 @@
             sekolah = pts.slice(1).join("-").trim();
         }
 
-        // --- FIX FOTO: MENGGUNAKAN SINTAKS JS ${} YANG BENAR ---
+        // LOGIKA FOTO FIX
         const rawF = p['KIRIM PAS FOTO UKURAN POSTCARD'] || '';
         const matchId = rawF.match(/[-\w]{25,}/); 
         let fSrc = "";
         if (matchId) {
-            // Perbaikan fatal: Menambahkan simbol $ sebelum kurung kurawal
-            fSrc = `https://googleusercontent.com/profile/picture/1${matchId[0]}`;
+            fSrc = `https://googleusercontent.com/profile/picture/3${matchId[0]}`;
         }
 
         wrap.innerHTML = `
@@ -267,8 +250,7 @@
                     <tbody>
                         ${["FASHOHAH","TARTIL","GHARIB","TAJWID","DDH","SSP","SHOLAT","WUDHU"].map((m, idx) => `
                         <tr>
-                            <td class="col-no">${idx+1}</td>
-                            <td>${m}</td>
+                            <td class="col-no">${idx+1}</td><td>${m}</td>
                             <td style="width:20%; color:#aaa; vertical-align:top; font-size:9pt;">${(idx%2===0)?(idx+1):''}</td>
                             <td style="width:20%; color:#aaa; vertical-align:top; font-size:9pt;">${(idx%2!==0)?(idx+1):''}</td>
                         </tr>`).join('')}
