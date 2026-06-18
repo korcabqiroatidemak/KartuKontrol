@@ -125,27 +125,38 @@
 <div id="main-output"></div>
 
 <script>
-    const SHEET_ID = '1eIcvIgCLWG3F9jQdsw5XN9llOsK2PoYWKUg1qaQJyyA';
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Biodata Cek`;
+    // UPDATE: Terhubung langsung ke Sheet BIO dan GID-nya
+    const SHEET_ID = '180oIFF3WRaijxLn_LZiu12f0m5mTxZ8DY3w4t1Jd5FY';
+    const GID_BIO = '644681055';
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID_BIO}`;
     const LOGO_FILENAME = "QIRAATI.png";
     let groupedData = {};
 
     window.onload = async () => {
         try {
             const response = await fetch(SHEET_URL);
+            if (!response.ok) throw new Error("Gagal ambil data");
             const csvText = await response.text();
+            
+            if (csvText.startsWith("<!DOCTYPE html>")) {
+                throw new Error("Akses Google Sheet ditolak. Atur ke 'Siapa saja yang memiliki link'.");
+            }
+            
             processData(csvText);
         } catch (e) {
-            document.getElementById('shift-container').innerText = "Gagal memuat data.";
+            document.getElementById('shift-container').innerText = e.message || "Gagal memuat data.";
         }
     };
 
     function processData(csv) {
         const rows = csv.trim().split('\n');
+        if (rows.length < 2) return;
+        
         const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim().toUpperCase());
         
         groupedData = {};
         for (let i = 1; i < rows.length; i++) {
+            // Regex parser tangguh untuk membaca CSV
             const cols = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
             let p = {};
             cols.forEach((v, j) => p[headers[j]] = v ? v.replace(/"/g, '').trim() : '');
@@ -179,7 +190,8 @@
             allSelectedParticipants = allSelectedParticipants.concat(groupedData[cb.value]);
         });
 
-        allSelectedParticipants.sort((a, b) => parseInt(a.NOMOR) - parseInt(b.NOMOR));
+        // UPDATE: Sorting menggunakan key "NO."
+        allSelectedParticipants.sort((a, b) => parseInt(a['NO.'] || 0) - parseInt(b['NO.'] || 0));
         renderPages(allSelectedParticipants);
     }
 
@@ -203,7 +215,8 @@
 
             for (let j = start; j < end; j++) {
                 page.appendChild(createCard(participants[j], j));
-                generateQR(participants[j]['ID PENDAFTARAN'], `qr-${j}`);
+                // UPDATE: Memanggil data QR code menggunakan key "ID PESERTA"
+                generateQR(participants[j]['ID PESERTA'], `qr-${j}`);
             }
             output.appendChild(page);
         }
@@ -219,7 +232,8 @@
         else if (sVal === "2") shiftDisplay = "Shift II (08.30 WIB)";
         else if (sVal === "3") shiftDisplay = "Shift III (10.00 WIB)";
 
-        const rawL = p['ASAL LEMBAGA / TPQ'] || '-';
+        // UPDATE: Key diubah dari ASAL LEMBAGA / TPQ menjadi ASAL LEMBAGA
+        const rawL = p['ASAL LEMBAGA'] || '-';
         let kota = "", sekolah = rawL;
         if (rawL.includes("-")) {
             const pts = rawL.split("-");
@@ -227,14 +241,12 @@
             sekolah = pts.slice(1).join("-").trim();
         }
 
-        // --- SOLUSI FIX FOTO GOOGLE DRIVE ---
-        const rawF = p['KIRIM PAS FOTO UKURAN POSTCARD'] || '';
-        const matchId = rawF.match(/[-\w]{25,}/); 
+        // UPDATE: Penanganan URL Foto yang lebih presisi untuk thumbnail Google Drive
+        const rawF = p['FOTO'] || '';
+        const matchId = rawF.match(/id=([a-zA-Z0-9_-]+)/) || rawF.match(/\/d\/([a-zA-Z0-9_-]+)/); 
         let fSrc = "";
-        if (matchId) {
-            // Menggunakan endpoint lh3.googleusercontent.com/d/ID 
-            // Jalur ini jauh lebih stabil untuk file gambar di Google Drive
-            fSrc = `https://lh3.googleusercontent.com/d/${matchId[0]}`;
+        if (matchId && matchId[1]) {
+            fSrc = `https://drive.google.com/thumbnail?id=${matchId[1]}&sz=w400`;
         }
 
         wrap.innerHTML = `
@@ -246,20 +258,20 @@
                         <div class="t2">EVALUASI BELAJAR</div>
                         <div class="t3">TAHAP AKHIR QIROATI (EBTAQ)</div>
                     </div>
-                    <div class="nomor-box">${String(p['NOMOR'] || '').padStart(3, '0')}</div>
+                    <div class="nomor-box">${String(p['NO.'] || '').padStart(3, '0')}</div>
                 </div>
                 <div class="identity-grid">
                     <div class="id-photo">
                         ${fSrc ? `<img src="${fSrc}" alt="Foto" onerror="this.parentElement.innerHTML='<small>X</small>';">` : '<small>3x4</small>'}
                     </div>
-                    <div class="id-text-row">${p['ID PENDAFTARAN'] || '-'}</div>
+                    <div class="id-text-row">${p['ID PESERTA'] || '-'}</div>
                     <div class="id-text-row">Gelombang ${p['GELOMBANG'] || '-'}</div>
                     <div class="id-text-row">${shiftDisplay}</div>
                     <div class="id-qr"><div id="qr-${i}"></div></div>
                     <div class="id-lembaga-full">${kota}</div>
                     <div class="id-lembaga-full">${sekolah}</div>
                 </div>
-                <div class="nama-box">${(p['NAMA LENGKAP (SESUAI AKTA)'] || '').toUpperCase()}</div>
+                <div class="nama-box">${(p['NAMA LENGKAP'] || '').toUpperCase()}</div>
                 <table>
                     <thead>
                         <tr><th class="col-no">NO</th><th>MATERI</th><th colspan="2">PARAF</th></tr>
